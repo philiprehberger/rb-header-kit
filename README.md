@@ -2,7 +2,11 @@
 
 [![Tests](https://github.com/philiprehberger/rb-header-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-header-kit/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-header_kit.svg)](https://rubygems.org/gems/philiprehberger-header_kit)
+[![GitHub release](https://img.shields.io/github/v/release/philiprehberger/rb-header-kit)](https://github.com/philiprehberger/rb-header-kit/releases)
+[![Last updated](https://img.shields.io/github/last-commit/philiprehberger/rb-header-kit)](https://github.com/philiprehberger/rb-header-kit/commits/main)
 [![License](https://img.shields.io/github/license/philiprehberger/rb-header-kit)](LICENSE)
+[![Bug Reports](https://img.shields.io/github/issues/philiprehberger/rb-header-kit/bug)](https://github.com/philiprehberger/rb-header-kit/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![Feature Requests](https://img.shields.io/github/issues/philiprehberger/rb-header-kit/enhancement)](https://github.com/philiprehberger/rb-header-kit/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 [![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 HTTP header parsing, construction, and content negotiation
@@ -39,6 +43,44 @@ Philiprehberger::HeaderKit.parse_accept("text/html;q=0.9, application/json")
 #     {type: "text/html", quality: 0.9, params: {}}]
 ```
 
+### Build Accept
+
+```ruby
+Philiprehberger::HeaderKit.build_accept([{type: "text/html"}, {type: "application/json", quality: 0.9}])
+# => "text/html, application/json;q=0.9"
+```
+
+### Parse Accept-Language
+
+```ruby
+Philiprehberger::HeaderKit.parse_accept_language("en-US,en;q=0.9,fr;q=0.8")
+# => [{language: "en-US", quality: 1.0}, {language: "en", quality: 0.9}, {language: "fr", quality: 0.8}]
+```
+
+### Negotiate Language
+
+```ruby
+Philiprehberger::HeaderKit.negotiate_language("en-US,fr;q=0.9", ["fr", "en"])
+# => "en"
+```
+
+### Parse Accept-Encoding
+
+```ruby
+Philiprehberger::HeaderKit.parse_accept_encoding("gzip, deflate;q=0.5, br;q=0.8")
+# => [{encoding: "gzip", quality: 1.0}, {encoding: "br", quality: 0.8}, {encoding: "deflate", quality: 0.5}]
+```
+
+### Parse Authorization
+
+```ruby
+Philiprehberger::HeaderKit.parse_authorization("Bearer eyJhbGciOiJIUzI1NiJ9")
+# => {scheme: "Bearer", credentials: "eyJhbGciOiJIUzI1NiJ9"}
+
+Philiprehberger::HeaderKit.parse_authorization('Digest username="admin", realm="example"')
+# => {scheme: "Digest", params: {"username" => "admin", "realm" => "example"}}
+```
+
 ### Parse Cache-Control
 
 ```ruby
@@ -58,6 +100,20 @@ Philiprehberger::HeaderKit.build_cache_control(public: true, max_age: 3600)
 ```ruby
 Philiprehberger::HeaderKit.parse_content_type("text/html; charset=utf-8")
 # => {media_type: "text/html", charset: "utf-8", boundary: nil}
+```
+
+### Parse Cookie
+
+```ruby
+Philiprehberger::HeaderKit.parse_cookie("session=abc123; user=john")
+# => {"session" => "abc123", "user" => "john"}
+```
+
+### Build Set-Cookie
+
+```ruby
+Philiprehberger::HeaderKit.build_set_cookie("session", "abc123", secure: true, httponly: true, path: "/")
+# => "session=abc123; Path=/; Secure; HttpOnly"
 ```
 
 ### Parse Link
@@ -86,9 +142,16 @@ Philiprehberger::HeaderKit.negotiate("text/html;q=0.9, application/json", ["text
 | Method | Description |
 |--------|-------------|
 | `HeaderKit.parse_accept(header)` | Parse Accept header into sorted entries |
+| `HeaderKit.build_accept(types)` | Build Accept header string from type array |
+| `HeaderKit.parse_accept_language(header)` | Parse Accept-Language into sorted entries |
+| `HeaderKit.negotiate_language(header, available)` | Language negotiation, returns best match or nil |
+| `HeaderKit.parse_accept_encoding(header)` | Parse Accept-Encoding into sorted entries |
+| `HeaderKit.parse_authorization(header)` | Parse Authorization header (Bearer, Basic, Digest) |
 | `HeaderKit.parse_cache_control(header)` | Parse Cache-Control into directive hash |
 | `HeaderKit.build_cache_control(directives)` | Build Cache-Control string from hash |
 | `HeaderKit.parse_content_type(header)` | Parse Content-Type into components |
+| `HeaderKit.parse_cookie(header)` | Parse Cookie header into name-value hash |
+| `HeaderKit.build_set_cookie(name, value, **opts)` | Build Set-Cookie header string |
 | `HeaderKit.parse_link(header)` | Parse Link header into entry array |
 | `HeaderKit.build_link(links)` | Build Link header from array of hashes |
 | `HeaderKit.negotiate(accept_header, available)` | Content negotiation, returns best match or nil |
@@ -97,9 +160,16 @@ Philiprehberger::HeaderKit.negotiate("text/html;q=0.9, application/json", ["text
 
 ```bash
 bundle install
-bundle exec rspec      # Run tests
-bundle exec rubocop    # Check code style
+bundle exec rspec
+bundle exec rubocop
 ```
+
+## Support
+
+If you find this package useful, consider giving it a star on GitHub — it helps motivate continued maintenance and development.
+
+[![LinkedIn](https://img.shields.io/badge/Philip%20Rehberger-LinkedIn-0A66C2?logo=linkedin)](https://www.linkedin.com/in/philiprehberger)
+[![More packages](https://img.shields.io/badge/more-open%20source%20packages-blue)](https://philiprehberger.com/open-source-packages)
 
 ## License
 

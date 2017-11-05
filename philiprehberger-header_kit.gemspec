@@ -8,8 +8,9 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Philip Rehberger']
   spec.email         = ['me@philiprehberger.com']
   spec.summary       = 'HTTP header parsing, construction, and content negotiation'
-  spec.description   = 'Parse and build Accept, Cache-Control, Content-Type, and Link HTTP headers. ' \
-                       'Includes content negotiation for selecting the best response type.'
+  spec.description   = 'Parse and build Accept, Accept-Language, Accept-Encoding, Authorization, Cache-Control, ' \
+                       'Content-Type, Cookie, and Link HTTP headers. Includes content negotiation for selecting ' \
+                       'the best response type or language.'
   spec.homepage      = 'https://github.com/philiprehberger/rb-header-kit'
   spec.license       = 'MIT'
   spec.required_ruby_version = '>= 3.1.0'
