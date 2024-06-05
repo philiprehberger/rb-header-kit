@@ -690,4 +690,42 @@ RSpec.describe Philiprehberger::HeaderKit do
       expect(result).to eq('text/html')
     end
   end
+
+  describe '.parse_retry_after' do
+    it 'parses a numeric seconds value' do
+      result = described_class.parse_retry_after('120')
+      expect(result).to eq({ seconds: 120 })
+    end
+
+    it 'parses zero seconds' do
+      result = described_class.parse_retry_after('0')
+      expect(result).to eq({ seconds: 0 })
+    end
+
+    it 'parses a large numeric value' do
+      result = described_class.parse_retry_after('86400')
+      expect(result).to eq({ seconds: 86_400 })
+    end
+
+    it 'parses an HTTP date' do
+      result = described_class.parse_retry_after('Fri, 04 Apr 2026 12:00:00 GMT')
+      expect(result[:date]).to be_a(Time)
+      expect(result[:date].year).to eq(2026)
+      expect(result[:date].month).to eq(4)
+      expect(result[:date].day).to eq(4)
+      expect(result[:date].hour).to eq(12)
+    end
+
+    it 'returns nil for nil input' do
+      expect(described_class.parse_retry_after(nil)).to be_nil
+    end
+
+    it 'returns nil for empty string' do
+      expect(described_class.parse_retry_after('')).to be_nil
+    end
+
+    it 'raises an error for an invalid date string' do
+      expect { described_class.parse_retry_after('not-a-date') }.to raise_error(ArgumentError)
+    end
+  end
 end

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-04
+
+### Added
+
+- `parse_retry_after` for parsing Retry-After headers (numeric seconds or HTTP date)
+
 ## [0.3.1] - 2026-03-31
 
 ### Changed

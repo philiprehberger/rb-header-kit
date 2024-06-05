@@ -14,6 +14,7 @@ require_relative 'header_kit/negotiation'
 require_relative 'header_kit/cors'
 require_relative 'header_kit/security'
 require_relative 'header_kit/forwarded'
+require_relative 'header_kit/retry_after'
 
 module Philiprehberger
   module HeaderKit
@@ -173,6 +174,17 @@ module Philiprehberger
     # @return [Array<Hash>] entries with :protocol, :host, :comment keys
     def self.parse_via(header)
       Forwarded.parse_via(header)
+    end
+
+    # Parse a Retry-After header.
+    #
+    # Returns a hash with :seconds (Integer) for numeric values,
+    # or :date (Time) for HTTP date values. Returns nil for nil/empty input.
+    #
+    # @param header [String] the Retry-After header value
+    # @return [Hash, nil] hash with :seconds or :date key, or nil
+    def self.parse_retry_after(header)
+      RetryAfter.parse(header)
     end
   end
 end
