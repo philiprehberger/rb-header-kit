@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-03-28
+
+### Added
+
+- Parse Accept-Language headers with quality values
+- Negotiate best language match from Accept-Language against available languages
+- Parse Accept-Encoding headers with quality values
+- Parse Authorization headers (Bearer, Basic, Digest schemes)
+- Parse Cookie headers into name-value hashes
+- Build Set-Cookie header strings with all standard attributes
+- Build Accept header strings from structured type arrays
+
 ## [0.1.1] - 2026-03-26
 
 ### Changed

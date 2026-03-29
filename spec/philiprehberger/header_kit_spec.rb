@@ -55,6 +55,382 @@ RSpec.describe Philiprehberger::HeaderKit do
     end
   end
 
+  describe '.build_accept' do
+    it 'builds a simple Accept header' do
+      result = described_class.build_accept([{ type: 'application/json' }])
+      expect(result).to eq('application/json')
+    end
+
+    it 'builds multiple types' do
+      types = [
+        { type: 'text/html', quality: 1.0 },
+        { type: 'application/json', quality: 0.9 }
+      ]
+      result = described_class.build_accept(types)
+      expect(result).to eq('text/html, application/json;q=0.9')
+    end
+
+    it 'omits quality when 1.0' do
+      result = described_class.build_accept([{ type: 'text/html', quality: 1.0 }])
+      expect(result).to eq('text/html')
+    end
+
+    it 'includes quality when less than 1.0' do
+      result = described_class.build_accept([{ type: 'text/html', quality: 0.5 }])
+      expect(result).to eq('text/html;q=0.5')
+    end
+
+    it 'formats quality with minimal decimal places' do
+      result = described_class.build_accept([{ type: 'text/html', quality: 0.8 }])
+      expect(result).to eq('text/html;q=0.8')
+    end
+
+    it 'returns empty string for nil input' do
+      expect(described_class.build_accept(nil)).to eq('')
+    end
+
+    it 'returns empty string for empty array' do
+      expect(described_class.build_accept([])).to eq('')
+    end
+
+    it 'handles types without quality key' do
+      result = described_class.build_accept([{ type: 'text/html' }, { type: 'text/plain' }])
+      expect(result).to eq('text/html, text/plain')
+    end
+
+    it 'handles zero quality' do
+      result = described_class.build_accept([{ type: 'text/html', quality: 0.0 }])
+      expect(result).to include('q=0.0')
+    end
+  end
+
+  describe '.parse_accept_language' do
+    it 'parses a simple language tag' do
+      result = described_class.parse_accept_language('en')
+      expect(result).to eq([{ language: 'en', quality: 1.0 }])
+    end
+
+    it 'parses multiple languages with quality' do
+      result = described_class.parse_accept_language('en;q=0.9, fr;q=1.0, de;q=0.5')
+      expect(result.map { |e| e[:language] }).to eq(%w[fr en de])
+      expect(result.map { |e| e[:quality] }).to eq([1.0, 0.9, 0.5])
+    end
+
+    it 'parses language with region subtag' do
+      result = described_class.parse_accept_language('en-US, en-GB;q=0.8')
+      expect(result.first[:language]).to eq('en-US')
+      expect(result.last[:language]).to eq('en-GB')
+    end
+
+    it 'defaults quality to 1.0' do
+      result = described_class.parse_accept_language('en-US')
+      expect(result.first[:quality]).to eq(1.0)
+    end
+
+    it 'handles wildcard' do
+      result = described_class.parse_accept_language('*')
+      expect(result.first[:language]).to eq('*')
+    end
+
+    it 'returns empty array for nil input' do
+      expect(described_class.parse_accept_language(nil)).to eq([])
+    end
+
+    it 'returns empty array for empty string' do
+      expect(described_class.parse_accept_language('')).to eq([])
+    end
+
+    it 'sorts by quality descending' do
+      result = described_class.parse_accept_language('de;q=0.1, en;q=0.9, fr;q=0.5')
+      expect(result.first[:language]).to eq('en')
+      expect(result.last[:language]).to eq('de')
+    end
+
+    it 'preserves order for equal quality values' do
+      result = described_class.parse_accept_language('en, fr')
+      languages = result.map { |e| e[:language] }
+      expect(languages).to eq(%w[en fr])
+    end
+
+    it 'handles complex real-world header' do
+      result = described_class.parse_accept_language('en-US,en;q=0.9,fr;q=0.8,de;q=0.7')
+      expect(result.map { |e| e[:language] }).to eq(%w[en-US en fr de])
+    end
+  end
+
+  describe '.negotiate_language' do
+    it 'returns exact match' do
+      result = described_class.negotiate_language('en, fr', %w[fr de])
+      expect(result).to eq('fr')
+    end
+
+    it 'respects quality values' do
+      result = described_class.negotiate_language('en;q=0.5, fr;q=0.9', %w[en fr])
+      expect(result).to eq('fr')
+    end
+
+    it 'matches by prefix' do
+      result = described_class.negotiate_language('en', %w[en-US en-GB])
+      expect(result).to eq('en-US')
+    end
+
+    it 'matches base language from regional variant' do
+      result = described_class.negotiate_language('en-US', %w[en de])
+      expect(result).to eq('en')
+    end
+
+    it 'matches wildcard to first available' do
+      result = described_class.negotiate_language('*', %w[de fr])
+      expect(result).to eq('de')
+    end
+
+    it 'returns nil when no match' do
+      result = described_class.negotiate_language('ja', %w[en fr])
+      expect(result).to be_nil
+    end
+
+    it 'returns nil for empty available list' do
+      expect(described_class.negotiate_language('en', [])).to be_nil
+    end
+
+    it 'returns first available when header is nil' do
+      expect(described_class.negotiate_language(nil, %w[en fr])).to eq('en')
+    end
+
+    it 'returns nil when quality is zero' do
+      result = described_class.negotiate_language('en;q=0', %w[en])
+      expect(result).to be_nil
+    end
+
+    it 'handles case-insensitive matching' do
+      result = described_class.negotiate_language('EN-US', %w[en-us])
+      expect(result).to eq('en-us')
+    end
+  end
+
+  describe '.parse_accept_encoding' do
+    it 'parses a simple encoding' do
+      result = described_class.parse_accept_encoding('gzip')
+      expect(result).to eq([{ encoding: 'gzip', quality: 1.0 }])
+    end
+
+    it 'parses multiple encodings with quality' do
+      result = described_class.parse_accept_encoding('gzip;q=1.0, deflate;q=0.5, br;q=0.8')
+      expect(result.map { |e| e[:encoding] }).to eq(%w[gzip br deflate])
+      expect(result.map { |e| e[:quality] }).to eq([1.0, 0.8, 0.5])
+    end
+
+    it 'defaults quality to 1.0' do
+      result = described_class.parse_accept_encoding('br')
+      expect(result.first[:quality]).to eq(1.0)
+    end
+
+    it 'handles identity encoding' do
+      result = described_class.parse_accept_encoding('identity')
+      expect(result.first[:encoding]).to eq('identity')
+    end
+
+    it 'handles wildcard' do
+      result = described_class.parse_accept_encoding('*')
+      expect(result.first[:encoding]).to eq('*')
+    end
+
+    it 'returns empty array for nil input' do
+      expect(described_class.parse_accept_encoding(nil)).to eq([])
+    end
+
+    it 'returns empty array for empty string' do
+      expect(described_class.parse_accept_encoding('')).to eq([])
+    end
+
+    it 'sorts by quality descending' do
+      result = described_class.parse_accept_encoding('deflate;q=0.1, gzip;q=0.9, br;q=0.5')
+      expect(result.first[:encoding]).to eq('gzip')
+      expect(result.last[:encoding]).to eq('deflate')
+    end
+
+    it 'preserves order for equal quality values' do
+      result = described_class.parse_accept_encoding('gzip, br')
+      encodings = result.map { |e| e[:encoding] }
+      expect(encodings).to eq(%w[gzip br])
+    end
+
+    it 'downcases encoding names' do
+      result = described_class.parse_accept_encoding('GZIP, Deflate')
+      expect(result.map { |e| e[:encoding] }).to eq(%w[gzip deflate])
+    end
+  end
+
+  describe '.parse_authorization' do
+    context 'with Bearer token' do
+      it 'parses Bearer authorization' do
+        result = described_class.parse_authorization('Bearer eyJhbGciOiJIUzI1NiJ9')
+        expect(result[:scheme]).to eq('Bearer')
+        expect(result[:credentials]).to eq('eyJhbGciOiJIUzI1NiJ9')
+      end
+    end
+
+    context 'with Basic credentials' do
+      it 'parses Basic authorization' do
+        result = described_class.parse_authorization('Basic dXNlcjpwYXNz')
+        expect(result[:scheme]).to eq('Basic')
+        expect(result[:credentials]).to eq('dXNlcjpwYXNz')
+      end
+    end
+
+    context 'with Digest parameters' do
+      it 'parses Digest authorization' do
+        header = 'Digest username="admin", realm="example", nonce="abc123", uri="/resource", response="def456"'
+        result = described_class.parse_authorization(header)
+        expect(result[:scheme]).to eq('Digest')
+        expect(result[:params]).to be_a(Hash)
+        expect(result[:params]['username']).to eq('admin')
+        expect(result[:params]['realm']).to eq('example')
+        expect(result[:params]['nonce']).to eq('abc123')
+        expect(result[:params]['uri']).to eq('/resource')
+        expect(result[:params]['response']).to eq('def456')
+      end
+
+      it 'handles unquoted Digest values' do
+        header = 'Digest qop=auth, nc=00000001'
+        result = described_class.parse_authorization(header)
+        expect(result[:params]['qop']).to eq('auth')
+        expect(result[:params]['nc']).to eq('00000001')
+      end
+    end
+
+    it 'returns nil fields for nil input' do
+      result = described_class.parse_authorization(nil)
+      expect(result).to eq({ scheme: nil, credentials: nil })
+    end
+
+    it 'returns nil fields for empty string' do
+      result = described_class.parse_authorization('')
+      expect(result).to eq({ scheme: nil, credentials: nil })
+    end
+
+    it 'handles scheme-only without credentials' do
+      result = described_class.parse_authorization('Bearer')
+      expect(result[:scheme]).to eq('Bearer')
+      expect(result[:credentials]).to be_nil
+    end
+
+    it 'handles unknown scheme' do
+      result = described_class.parse_authorization('Custom token123')
+      expect(result[:scheme]).to eq('Custom')
+      expect(result[:credentials]).to eq('token123')
+    end
+  end
+
+  describe '.parse_cookie' do
+    it 'parses a single cookie' do
+      result = described_class.parse_cookie('session=abc123')
+      expect(result).to eq({ 'session' => 'abc123' })
+    end
+
+    it 'parses multiple cookies' do
+      result = described_class.parse_cookie('session=abc123; user=john; theme=dark')
+      expect(result).to eq({ 'session' => 'abc123', 'user' => 'john', 'theme' => 'dark' })
+    end
+
+    it 'handles cookies with equals in value' do
+      result = described_class.parse_cookie('token=abc=123=xyz')
+      expect(result).to eq({ 'token' => 'abc=123=xyz' })
+    end
+
+    it 'handles cookies without value' do
+      result = described_class.parse_cookie('flag')
+      expect(result).to eq({ 'flag' => '' })
+    end
+
+    it 'trims whitespace from names and values' do
+      result = described_class.parse_cookie('  name  =  value  ')
+      expect(result).to eq({ 'name' => 'value' })
+    end
+
+    it 'returns empty hash for nil input' do
+      expect(described_class.parse_cookie(nil)).to eq({})
+    end
+
+    it 'returns empty hash for empty string' do
+      expect(described_class.parse_cookie('')).to eq({})
+    end
+
+    it 'handles empty cookie value' do
+      result = described_class.parse_cookie('name=')
+      expect(result).to eq({ 'name' => '' })
+    end
+  end
+
+  describe '.build_set_cookie' do
+    it 'builds a simple Set-Cookie header' do
+      result = described_class.build_set_cookie('session', 'abc123')
+      expect(result).to eq('session=abc123')
+    end
+
+    it 'includes Expires attribute' do
+      result = described_class.build_set_cookie('session', 'abc', expires: 'Thu, 01 Jan 2027 00:00:00 GMT')
+      expect(result).to include('Expires=Thu, 01 Jan 2027 00:00:00 GMT')
+    end
+
+    it 'includes Max-Age attribute' do
+      result = described_class.build_set_cookie('session', 'abc', max_age: 3600)
+      expect(result).to include('Max-Age=3600')
+    end
+
+    it 'includes Secure flag' do
+      result = described_class.build_set_cookie('session', 'abc', secure: true)
+      expect(result).to include('Secure')
+    end
+
+    it 'includes HttpOnly flag' do
+      result = described_class.build_set_cookie('session', 'abc', httponly: true)
+      expect(result).to include('HttpOnly')
+    end
+
+    it 'includes SameSite attribute' do
+      result = described_class.build_set_cookie('session', 'abc', samesite: 'Strict')
+      expect(result).to include('SameSite=Strict')
+    end
+
+    it 'includes Path attribute' do
+      result = described_class.build_set_cookie('session', 'abc', path: '/')
+      expect(result).to include('Path=/')
+    end
+
+    it 'includes Domain attribute' do
+      result = described_class.build_set_cookie('session', 'abc', domain: 'example.com')
+      expect(result).to include('Domain=example.com')
+    end
+
+    it 'builds with all attributes' do
+      result = described_class.build_set_cookie(
+        'session', 'abc123',
+        expires: 'Thu, 01 Jan 2027 00:00:00 GMT',
+        max_age: 3600,
+        secure: true,
+        httponly: true,
+        samesite: 'Lax',
+        path: '/',
+        domain: 'example.com'
+      )
+      expect(result).to eq(
+        'session=abc123; Expires=Thu, 01 Jan 2027 00:00:00 GMT; Max-Age=3600; ' \
+        'Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Lax'
+      )
+    end
+
+    it 'omits false boolean flags' do
+      result = described_class.build_set_cookie('session', 'abc', secure: false, httponly: false)
+      expect(result).to eq('session=abc')
+    end
+
+    it 'omits nil attributes' do
+      result = described_class.build_set_cookie('session', 'abc', expires: nil, path: nil)
+      expect(result).to eq('session=abc')
+    end
+  end
+
   describe '.parse_cache_control' do
     it 'parses max-age directive' do
       result = described_class.parse_cache_control('max-age=3600')
