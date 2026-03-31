@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-03-31
+
+### Added
+
+- `parse_cors` and `build_cors` for CORS header handling
+- `security_headers` for generating recommended security headers
+- `parse_forwarded` for RFC 7239 Forwarded header parsing
+- `parse_via` for Via header parsing
+
 ## [0.2.0] - 2026-03-28
 
 ### Added

@@ -11,6 +11,9 @@ require_relative 'header_kit/content_type'
 require_relative 'header_kit/cookie'
 require_relative 'header_kit/link'
 require_relative 'header_kit/negotiation'
+require_relative 'header_kit/cors'
+require_relative 'header_kit/security'
+require_relative 'header_kit/forwarded'
 
 module Philiprehberger
   module HeaderKit
@@ -130,6 +133,46 @@ module Philiprehberger
     # @return [String, nil] the best matching type, or nil if no match
     def self.negotiate(accept_header, available)
       Negotiation.negotiate(accept_header, available)
+    end
+
+    # Parse CORS-related headers from a request.
+    #
+    # @param headers [Hash] request headers hash
+    # @return [Hash] with :origin, :method, :headers keys
+    def self.parse_cors(headers)
+      Cors.parse(headers)
+    end
+
+    # Build CORS response headers.
+    #
+    # @param options [Hash] CORS options (origin:, methods:, headers:, max_age:, credentials:, expose:)
+    # @return [Hash{String => String}] response headers
+    def self.build_cors(**options)
+      Cors.build(**options)
+    end
+
+    # Generate recommended security response headers.
+    #
+    # @param options [Hash] overrides (hsts:, csp:, frame:, content_type_options:, referrer_policy:)
+    # @return [Hash{String => String}] security headers
+    def self.security_headers(**options)
+      Security.headers(**options)
+    end
+
+    # Parse an RFC 7239 Forwarded header.
+    #
+    # @param header [String] the Forwarded header value
+    # @return [Array<Hash>] parsed entries with symbol keys
+    def self.parse_forwarded(header)
+      Forwarded.parse(header)
+    end
+
+    # Parse a Via header into structured entries.
+    #
+    # @param header [String] the Via header value
+    # @return [Array<Hash>] entries with :protocol, :host, :comment keys
+    def self.parse_via(header)
+      Forwarded.parse_via(header)
     end
   end
 end

@@ -137,6 +137,55 @@ Philiprehberger::HeaderKit.negotiate("text/html;q=0.9, application/json", ["text
 # => "application/json"
 ```
 
+### Parse CORS
+
+```ruby
+headers = {
+  'Origin' => 'https://example.com',
+  'Access-Control-Request-Method' => 'POST',
+  'Access-Control-Request-Headers' => 'Content-Type, Authorization'
+}
+Philiprehberger::HeaderKit.parse_cors(headers)
+# => {origin: "https://example.com", method: "POST", headers: ["Content-Type", "Authorization"]}
+```
+
+### Build CORS
+
+```ruby
+Philiprehberger::HeaderKit.build_cors(
+  origin: "https://example.com",
+  methods: ["GET", "POST"],
+  headers: ["Content-Type"],
+  max_age: 3600,
+  credentials: true
+)
+# => {"Access-Control-Allow-Origin" => "https://example.com", ...}
+```
+
+### Security Headers
+
+```ruby
+Philiprehberger::HeaderKit.security_headers
+# => {"X-Content-Type-Options" => "nosniff", "X-Frame-Options" => "DENY", ...}
+
+Philiprehberger::HeaderKit.security_headers(hsts: "max-age=31536000", csp: "default-src 'self'")
+# => includes Strict-Transport-Security and Content-Security-Policy
+```
+
+### Parse Forwarded
+
+```ruby
+Philiprehberger::HeaderKit.parse_forwarded('for=192.0.2.60;proto=http;by=203.0.113.43')
+# => [{for: "192.0.2.60", proto: "http", by: "203.0.113.43"}]
+```
+
+### Parse Via
+
+```ruby
+Philiprehberger::HeaderKit.parse_via('1.1 vegur, 1.0 fred')
+# => [{protocol: "1.1", host: "vegur"}, {protocol: "1.0", host: "fred"}]
+```
+
 ## API
 
 | Method | Description |
@@ -155,6 +204,11 @@ Philiprehberger::HeaderKit.negotiate("text/html;q=0.9, application/json", ["text
 | `HeaderKit.parse_link(header)` | Parse Link header into entry array |
 | `HeaderKit.build_link(links)` | Build Link header from array of hashes |
 | `HeaderKit.negotiate(accept_header, available)` | Content negotiation, returns best match or nil |
+| `HeaderKit.parse_cors(headers)` | Parse CORS-related request headers |
+| `HeaderKit.build_cors(**options)` | Build CORS response headers |
+| `HeaderKit.security_headers(**options)` | Generate recommended security headers |
+| `HeaderKit.parse_forwarded(header)` | Parse RFC 7239 Forwarded header |
+| `HeaderKit.parse_via(header)` | Parse Via header into structured entries |
 
 ## Development
 
