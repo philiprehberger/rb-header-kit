@@ -181,6 +181,16 @@ Philiprehberger::HeaderKit.parse_via('1.1 vegur, 1.0 fred')
 # => [{protocol: "1.1", host: "vegur"}, {protocol: "1.0", host: "fred"}]
 ```
 
+### Parse Retry-After
+
+```ruby
+Philiprehberger::HeaderKit.parse_retry_after("120")
+# => {seconds: 120}
+
+Philiprehberger::HeaderKit.parse_retry_after("Fri, 04 Apr 2026 12:00:00 GMT")
+# => {date: 2026-04-04 12:00:00 UTC}
+```
+
 ## API
 
 | Method | Description |
@@ -204,6 +214,7 @@ Philiprehberger::HeaderKit.parse_via('1.1 vegur, 1.0 fred')
 | `HeaderKit.security_headers(**options)` | Generate recommended security headers |
 | `HeaderKit.parse_forwarded(header)` | Parse RFC 7239 Forwarded header |
 | `HeaderKit.parse_via(header)` | Parse Via header into structured entries |
+| `HeaderKit.parse_retry_after(header)` | Parse Retry-After header (seconds or HTTP date) |
 
 ## Development
 
