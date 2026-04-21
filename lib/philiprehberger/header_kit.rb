@@ -9,6 +9,7 @@ require_relative 'header_kit/authorization'
 require_relative 'header_kit/cache_control'
 require_relative 'header_kit/content_type'
 require_relative 'header_kit/cookie'
+require_relative 'header_kit/etag'
 require_relative 'header_kit/link'
 require_relative 'header_kit/negotiation'
 require_relative 'header_kit/cors'
@@ -174,6 +175,19 @@ module Philiprehberger
     # @return [Array<Hash>] entries with :protocol, :host, :comment keys
     def self.parse_via(header)
       Forwarded.parse_via(header)
+    end
+
+    # Check whether an If-None-Match / If-Match header matches a resource ETag.
+    #
+    # Accepts a single ETag, comma-separated list, weak-prefixed values
+    # (e.g. `W/"abc"`), or the `*` wildcard. Weak and strong ETags collapse
+    # to equality on the inner token.
+    #
+    # @param header_value [String, nil] the raw header value
+    # @param resource_etag [String, nil] the resource ETag (unquoted, no `W/` prefix)
+    # @return [Boolean] true if any value in the header matches the resource
+    def self.etag_match?(header_value, resource_etag)
+      Etag.match?(header_value, resource_etag)
     end
 
     # Parse a Retry-After header.

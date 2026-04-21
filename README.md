@@ -181,6 +181,22 @@ Philiprehberger::HeaderKit.parse_via('1.1 vegur, 1.0 fred')
 # => [{protocol: "1.1", host: "vegur"}, {protocol: "1.0", host: "fred"}]
 ```
 
+### Conditional-request matching
+
+```ruby
+Philiprehberger::HeaderKit.etag_match?('"abc"', 'abc')
+# => true
+
+Philiprehberger::HeaderKit.etag_match?('W/"abc", W/"xyz"', 'xyz')
+# => true
+
+Philiprehberger::HeaderKit.etag_match?('*', 'anything')
+# => true
+
+Philiprehberger::HeaderKit.etag_match?('"abc"', 'nope')
+# => false
+```
+
 ### Parse Retry-After
 
 ```ruby
@@ -215,6 +231,7 @@ Philiprehberger::HeaderKit.parse_retry_after("Fri, 04 Apr 2026 12:00:00 GMT")
 | `HeaderKit.parse_forwarded(header)` | Parse RFC 7239 Forwarded header |
 | `HeaderKit.parse_via(header)` | Parse Via header into structured entries |
 | `HeaderKit.parse_retry_after(header)` | Parse Retry-After header (seconds or HTTP date) |
+| `HeaderKit.etag_match?(header_value, resource_etag)` | Check If-None-Match / If-Match against a resource ETag (list, `W/` weak prefix, `*` wildcard) |
 
 ## Development
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-17
+
+### Added
+- `HeaderKit.etag_match?(header_value, resource_etag)` for If-None-Match / If-Match evaluation with list, weak-prefix, and `*` wildcard support
+
 ## [0.4.0] - 2026-04-04
 
 ### Added
