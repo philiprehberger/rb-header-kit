@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-23
+
+### Added
+- `HeaderKit.build_accept_encoding(encodings)` for constructing Accept-Encoding headers from an array of `{encoding:, quality:}` hashes, mirroring the existing `build_accept` builder
+
 ## [0.5.0] - 2026-04-17
 
 ### Added

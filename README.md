@@ -66,6 +66,17 @@ Philiprehberger::HeaderKit.parse_accept_encoding("gzip, deflate;q=0.5, br;q=0.8"
 # => [{encoding: "gzip", quality: 1.0}, {encoding: "br", quality: 0.8}, {encoding: "deflate", quality: 0.5}]
 ```
 
+### Build Accept-Encoding
+
+```ruby
+Philiprehberger::HeaderKit.build_accept_encoding([
+  {encoding: "gzip"},
+  {encoding: "br", quality: 0.9},
+  {encoding: "deflate", quality: 0.5}
+])
+# => "gzip, br;q=0.9, deflate;q=0.5"
+```
+
 ### Parse Authorization
 
 ```ruby
@@ -216,6 +227,7 @@ Philiprehberger::HeaderKit.parse_retry_after("Fri, 04 Apr 2026 12:00:00 GMT")
 | `HeaderKit.parse_accept_language(header)` | Parse Accept-Language into sorted entries |
 | `HeaderKit.negotiate_language(header, available)` | Language negotiation, returns best match or nil |
 | `HeaderKit.parse_accept_encoding(header)` | Parse Accept-Encoding into sorted entries |
+| `HeaderKit.build_accept_encoding(encodings)` | Build Accept-Encoding header string from encoding array |
 | `HeaderKit.parse_authorization(header)` | Parse Authorization header (Bearer, Basic, Digest) |
 | `HeaderKit.parse_cache_control(header)` | Parse Cache-Control into directive hash |
 | `HeaderKit.build_cache_control(directives)` | Build Cache-Control string from hash |

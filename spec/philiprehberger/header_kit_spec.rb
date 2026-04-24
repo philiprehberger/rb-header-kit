@@ -261,6 +261,52 @@ RSpec.describe Philiprehberger::HeaderKit do
     end
   end
 
+  describe '.build_accept_encoding' do
+    it 'builds a single encoding with no quality' do
+      result = described_class.build_accept_encoding([{ encoding: 'gzip' }])
+      expect(result).to eq('gzip')
+    end
+
+    it 'joins multiple encodings with a comma' do
+      result = described_class.build_accept_encoding([{ encoding: 'gzip' }, { encoding: 'br' }])
+      expect(result).to eq('gzip, br')
+    end
+
+    it 'omits quality when quality is 1.0' do
+      result = described_class.build_accept_encoding([{ encoding: 'gzip', quality: 1.0 }])
+      expect(result).to eq('gzip')
+    end
+
+    it 'includes quality when less than 1.0' do
+      result = described_class.build_accept_encoding([{ encoding: 'br', quality: 0.5 }])
+      expect(result).to eq('br;q=0.5')
+    end
+
+    it 'formats quality with trailing zero removal' do
+      result = described_class.build_accept_encoding([{ encoding: 'br', quality: 0.8 }])
+      expect(result).to eq('br;q=0.8')
+    end
+
+    it 'returns empty string for nil input' do
+      expect(described_class.build_accept_encoding(nil)).to eq('')
+    end
+
+    it 'returns empty string for empty array' do
+      expect(described_class.build_accept_encoding([])).to eq('')
+    end
+
+    it 'round-trips via parse_accept_encoding' do
+      header = described_class.build_accept_encoding([
+                                                       { encoding: 'gzip' },
+                                                       { encoding: 'br', quality: 0.9 },
+                                                       { encoding: 'deflate', quality: 0.5 }
+                                                     ])
+      parsed = described_class.parse_accept_encoding(header)
+      expect(parsed.map { |e| e[:encoding] }).to eq(%w[gzip br deflate])
+      expect(parsed.map { |e| e[:quality] }).to eq([1.0, 0.9, 0.5])
+    end
+  end
+
   describe '.parse_authorization' do
     context 'with Bearer token' do
       it 'parses Bearer authorization' do

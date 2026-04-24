@@ -50,7 +50,37 @@ module Philiprehberger
         value.to_f.clamp(0.0, 1.0)
       end
 
-      private_class_method :parse_entry, :parse_quality
+      # Build an Accept-Encoding header string from an array of encoding hashes.
+      #
+      # @param encodings [Array<Hash>] each with :encoding and optional :quality
+      # @return [String] formatted Accept-Encoding header value
+      def self.build(encodings)
+        return '' if encodings.nil? || encodings.empty?
+
+        parts = encodings.map do |entry|
+          encoding = entry[:encoding]
+          quality = entry[:quality]
+
+          if quality && quality < 1.0
+            "#{encoding};q=#{format_quality(quality)}"
+          else
+            encoding
+          end
+        end
+
+        parts.join(', ')
+      end
+
+      # Format a quality value, removing trailing zeros.
+      #
+      # @param quality [Float] the quality value
+      # @return [String] formatted quality string
+      def self.format_quality(quality)
+        formatted = format('%.3f', quality)
+        formatted.sub(/0+\z/, '').sub(/\.\z/, '.0')
+      end
+
+      private_class_method :parse_entry, :parse_quality, :format_quality
     end
   end
 end

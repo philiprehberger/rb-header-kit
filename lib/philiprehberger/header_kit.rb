@@ -45,6 +45,14 @@ module Philiprehberger
       AcceptEncoding.parse(header)
     end
 
+    # Build an Accept-Encoding header string from an array of encoding hashes.
+    #
+    # @param encodings [Array<Hash>] each with :encoding and optional :quality
+    # @return [String] formatted Accept-Encoding header value
+    def self.build_accept_encoding(encodings)
+      AcceptEncoding.build(encodings)
+    end
+
     # Parse an Accept-Language header into structured entries sorted by quality.
     #
     # @param header [String] the Accept-Language header value
