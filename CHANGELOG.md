@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-05-08
+
+### Added
+- `HeaderKit.parse_range(header)` — parses an RFC 7233 Range header into `{ unit:, ranges: [{ first:, last: }, ...] }`. Supports byte ranges, suffix ranges (`-N`), and open-ended ranges (`N-`). Returns `nil` for invalid input.
+- `HeaderKit.build_range(unit, ranges)` — builds a Range header value from an array of `{ first:, last: }` hashes, `[first, last]` arrays, or Ruby `Range` objects (inclusive/exclusive both supported)
+
 ## [0.6.0] - 2026-04-23
 
 ### Added

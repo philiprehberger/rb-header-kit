@@ -218,6 +218,23 @@ Philiprehberger::HeaderKit.parse_retry_after("Fri, 04 Apr 2026 12:00:00 GMT")
 # => {date: 2026-04-04 12:00:00 UTC}
 ```
 
+### Parse and Build Range
+
+```ruby
+Philiprehberger::HeaderKit.parse_range("bytes=0-499")
+# => { unit: "bytes", ranges: [{ first: 0, last: 499 }] }
+
+Philiprehberger::HeaderKit.parse_range("bytes=0-99, 200-, -50")
+# => { unit: "bytes", ranges: [
+#      { first: 0, last: 99 },
+#      { first: 200, last: nil },
+#      { first: nil, last: 50 }
+#    ] }
+
+Philiprehberger::HeaderKit.build_range("bytes", [(0..99), { first: 200, last: nil }])
+# => "bytes=0-99, 200-"
+```
+
 ## API
 
 | Method | Description |
@@ -243,6 +260,8 @@ Philiprehberger::HeaderKit.parse_retry_after("Fri, 04 Apr 2026 12:00:00 GMT")
 | `HeaderKit.parse_forwarded(header)` | Parse RFC 7239 Forwarded header |
 | `HeaderKit.parse_via(header)` | Parse Via header into structured entries |
 | `HeaderKit.parse_retry_after(header)` | Parse Retry-After header (seconds or HTTP date) |
+| `HeaderKit.parse_range(header)` | Parse Range header into `{ unit:, ranges: }` (returns nil for invalid input) |
+| `HeaderKit.build_range(unit, ranges)` | Build a Range header from hashes, arrays, or Ruby Ranges |
 | `HeaderKit.etag_match?(header_value, resource_etag)` | Check If-None-Match / If-Match against a resource ETag (list, `W/` weak prefix, `*` wildcard) |
 
 ## Development

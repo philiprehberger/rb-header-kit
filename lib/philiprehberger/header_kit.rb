@@ -15,6 +15,7 @@ require_relative 'header_kit/negotiation'
 require_relative 'header_kit/cors'
 require_relative 'header_kit/security'
 require_relative 'header_kit/forwarded'
+require_relative 'header_kit/range'
 require_relative 'header_kit/retry_after'
 
 module Philiprehberger
@@ -196,6 +197,23 @@ module Philiprehberger
     # @return [Boolean] true if any value in the header matches the resource
     def self.etag_match?(header_value, resource_etag)
       Etag.match?(header_value, resource_etag)
+    end
+
+    # Parse a Range request header (RFC 7233 §3.1).
+    #
+    # @param header [String] the Range header value
+    # @return [Hash{Symbol => Object}, nil] hash with :unit and :ranges, or nil for invalid input
+    def self.parse_range(header)
+      Range.parse(header)
+    end
+
+    # Build a Range request header value.
+    #
+    # @param unit [String] the range unit (e.g. 'bytes')
+    # @param ranges [Array<Hash, Array, ::Range>] each as `{ first:, last: }`, `[first, last]`, or `::Range`
+    # @return [String] formatted Range header
+    def self.build_range(unit, ranges)
+      Range.build(unit, ranges)
     end
 
     # Parse a Retry-After header.

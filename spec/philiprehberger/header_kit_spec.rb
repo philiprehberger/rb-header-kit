@@ -774,4 +774,81 @@ RSpec.describe Philiprehberger::HeaderKit do
       expect { described_class.parse_retry_after('not-a-date') }.to raise_error(ArgumentError)
     end
   end
+
+  describe '.parse_range' do
+    it 'parses a single byte range' do
+      expect(described_class.parse_range('bytes=0-499')).to eq(
+        unit: 'bytes', ranges: [{ first: 0, last: 499 }]
+      )
+    end
+
+    it 'parses an open-ended range' do
+      expect(described_class.parse_range('bytes=500-')).to eq(
+        unit: 'bytes', ranges: [{ first: 500, last: nil }]
+      )
+    end
+
+    it 'parses a suffix range' do
+      expect(described_class.parse_range('bytes=-500')).to eq(
+        unit: 'bytes', ranges: [{ first: nil, last: 500 }]
+      )
+    end
+
+    it 'parses multiple ranges' do
+      expect(described_class.parse_range('bytes=0-99, 200-, -50')).to eq(
+        unit: 'bytes',
+        ranges: [
+          { first: 0, last: 99 },
+          { first: 200, last: nil },
+          { first: nil, last: 50 }
+        ]
+      )
+    end
+
+    it 'returns nil for nil and blank input' do
+      expect(described_class.parse_range(nil)).to be_nil
+      expect(described_class.parse_range('')).to be_nil
+      expect(described_class.parse_range('   ')).to be_nil
+    end
+
+    it 'returns nil for invalid input' do
+      expect(described_class.parse_range('garbage')).to be_nil
+      expect(described_class.parse_range('bytes=')).to be_nil
+      expect(described_class.parse_range('bytes=-')).to be_nil
+      expect(described_class.parse_range('bytes=abc-def')).to be_nil
+    end
+
+    it 'returns nil when first > last' do
+      expect(described_class.parse_range('bytes=500-100')).to be_nil
+    end
+
+    it 'supports custom units' do
+      expect(described_class.parse_range('items=10-20')).to eq(
+        unit: 'items', ranges: [{ first: 10, last: 20 }]
+      )
+    end
+  end
+
+  describe '.build_range' do
+    it 'builds a single byte range from a hash' do
+      expect(described_class.build_range('bytes', [{ first: 0, last: 499 }])).to eq('bytes=0-499')
+    end
+
+    it 'builds multiple ranges from arrays and hashes' do
+      out = described_class.build_range('bytes', [[0, 99], { first: 200, last: nil }])
+      expect(out).to eq('bytes=0-99, 200-')
+    end
+
+    it 'builds an inclusive Ruby Range' do
+      expect(described_class.build_range('bytes', [(0..99)])).to eq('bytes=0-99')
+    end
+
+    it 'builds an exclusive Ruby Range by adjusting the upper bound' do
+      expect(described_class.build_range('bytes', [(0...100)])).to eq('bytes=0-99')
+    end
+
+    it 'supports a single range entry without wrapping in an array' do
+      expect(described_class.build_range('bytes', { first: 10, last: 20 })).to eq('bytes=10-20')
+    end
+  end
 end
